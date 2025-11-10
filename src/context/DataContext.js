@@ -219,6 +219,26 @@ export const DataProvider = ({ children }) => {
           );
         }
       }
+
+      // Filtrar pesquisa_experiencias_users_permissions_user_lnk
+      if (filteredTables.pesquisa_experiencias_users_permissions_user_lnk?.data) {
+        filteredTables.pesquisa_experiencias_users_permissions_user_lnk.data =
+          filteredTables.pesquisa_experiencias_users_permissions_user_lnk.data.filter(link =>
+            usuariosFiltradosIds.has(link.user_id)
+          );
+
+        // Obter IDs das pesquisas dos usuários filtrados
+        const pesquisaIdsFiltrados = new Set(
+          filteredTables.pesquisa_experiencias_users_permissions_user_lnk.data.map(link => link.pesquisa_experiencia_id)
+        );
+
+        // Filtrar tabela pesquisa_experiencias
+        if (filteredTables.pesquisa_experiencias?.data) {
+          filteredTables.pesquisa_experiencias.data = filteredTables.pesquisa_experiencias.data.filter(pesquisa =>
+            pesquisaIdsFiltrados.has(pesquisa.id)
+          );
+        }
+      }
     }
 
     return filteredTables;
@@ -568,17 +588,15 @@ export const DataProvider = ({ children }) => {
 
     const usuarios = filteredData.up_users?.data || [];
     const checkins = filteredData.checkins?.data || [];
-    const resgates = filteredData.resgates?.data || [];
     const pesquisas = filteredData.pesquisa_experiencias?.data || [];
 
     // Contar totais de cada tabela
     const totalUsuarios = usuarios.length;
     const totalCheckins = checkins.length;
-    const totalResgates = resgates.length;
     const totalPesquisas = pesquisas.length;
 
     // Encontrar o maior valor para calcular as larguras proporcionais
-    const maiorValor = Math.max(totalUsuarios, totalCheckins, totalResgates, totalPesquisas);
+    const maiorValor = Math.max(totalUsuarios, totalCheckins, totalPesquisas);
 
     return [
       {
@@ -594,16 +612,10 @@ export const DataProvider = ({ children }) => {
         cor: '#198754'
       },
       {
-        etapa: 'Resgates',
-        quantidade: totalResgates,
-        percentual: maiorValor > 0 ? Math.round((totalResgates / maiorValor) * 100) : 0,
-        cor: '#dc3545'
-      },
-      {
         etapa: 'Pesquisa de Experiência',
         quantidade: totalPesquisas,
         percentual: maiorValor > 0 ? Math.round((totalPesquisas / maiorValor) * 100) : 0,
-        cor: '#ffc107'
+        cor: '#6f42c1'
       }
     ];
   }, [getFilteredData]);
@@ -683,7 +695,7 @@ export const DataProvider = ({ children }) => {
       faixa,
       label: labelsMap[faixa],
       quantidade,
-      percentual: total > 0 ? parseFloat(((quantidade / total) * 100).toFixed(1)) : 0
+      percentual: total > 0 ? parseFloat(((quantidade / total) * 100).toFixed(2)) : 0
     }));
   }, [getFilteredData]);
 
@@ -709,8 +721,8 @@ export const DataProvider = ({ children }) => {
       comConta,
       semConta,
       total,
-      comContaPerc: total > 0 ? parseFloat(((comConta / total) * 100).toFixed(1)) : 0,
-      semContaPerc: total > 0 ? parseFloat(((semConta / total) * 100).toFixed(1)) : 0
+      comContaPerc: total > 0 ? parseFloat(((comConta / total) * 100).toFixed(2)) : 0,
+      semContaPerc: total > 0 ? parseFloat(((semConta / total) * 100).toFixed(2)) : 0
     };
   }, [getFilteredData]);
 
@@ -723,6 +735,20 @@ export const DataProvider = ({ children }) => {
     const pesquisasUsuariosLnk = filteredData.pesquisa_experiencias_users_permissions_user_lnk?.data || [];
     const usuarios = filteredData.up_users?.data || [];
 
+    // Função auxiliar para extrair valor numérico da resposta (ex: "5 – Satisfeito plenamente" => 5)
+    const extrairValorNumerico = (resposta) => {
+      if (!resposta) return null;
+      const match = resposta.match(/^(\d+)/);
+      return match ? parseInt(match[1]) : null;
+    };
+
+    // Função auxiliar para buscar resposta de uma pergunta específica
+    const buscarResposta = (perguntaResposta, textoChave) => {
+      if (!perguntaResposta || !Array.isArray(perguntaResposta)) return null;
+      const item = perguntaResposta.find(pr => pr.pergunta && pr.pergunta.includes(textoChave));
+      return item?.resposta || null;
+    };
+
     // Fun��o auxiliar para calcular m�dia e grau de satisfa��o
     const calcularEstatisticas = (valores) => {
       if (valores.length === 0) return { media: 0, grau: 0, total: 0 };
@@ -731,7 +757,7 @@ export const DataProvider = ({ children }) => {
       const grau = (media / 5) * 100;
       return {
         media: parseFloat(media.toFixed(2)),
-        grau: parseFloat(grau.toFixed(1)),
+        grau: parseFloat(grau.toFixed(2)),
         total: valores.length
       };
     };
@@ -742,7 +768,7 @@ export const DataProvider = ({ children }) => {
       const notas4e5 = valores.filter(v => v >= 4).length;
       const percentual = (notas4e5 / valores.length) * 100;
       return {
-        percentual: parseFloat(percentual.toFixed(1)),
+        percentual: parseFloat(percentual.toFixed(2)),
         total: valores.length
       };
     };
@@ -752,20 +778,83 @@ export const DataProvider = ({ children }) => {
     // ============================================
     // Metodologia: 2/3 x % Associação Espontânea [1.1] + 1/3 x % Associação Estimulada [1.2]
 
-    // 1.1 Espontânea - % que respondeu BB
-    const respostasEspontaneas = pesquisas.filter(p => p.associacao_espontanea !== null);
-    const respostasBBEspontanea = respostasEspontaneas.filter(p =>
-      p.associacao_espontanea && p.associacao_espontanea.toLowerCase().includes('bb')
-    ).length;
-    const percEspontanea = respostasEspontaneas.length > 0
-      ? (respostasBBEspontanea / respostasEspontaneas.length) * 100
+    // Nuvem de palavras para identificar referências ao Banco do Brasil
+    const variacoesBB = [
+      'bb',
+      'banco do brasil',
+      'banco brasil',
+      'bancobrasil',
+      'bancodobrasil',
+      'banco_brasil',
+      'banco-brasil',
+      'banco do br',
+      'banco br',
+      'bancobr',
+      'b.b',
+      'b b',
+      'banco do brazil',
+      'banco brazil',
+      'bancobrazil',
+      'bancobrasileiro',
+      'banco brasileiro'
+    ];
+
+    // Função auxiliar para verificar se a resposta contém referência ao BB
+    const contemReferenciaBB = (resposta) => {
+      if (!resposta) return false;
+      const respostaLower = resposta.toLowerCase().trim();
+
+      // Verificar se a resposta é "sim"
+      if (respostaLower === 'sim') return true;
+
+      // Verificar se contém alguma variação do nome BB
+      return variacoesBB.some(variacao => respostaLower.includes(variacao));
+    };
+
+    // 1.1 Espontânea - % que respondeu BB ou Banco do Brasil
+    const respostasEspontaneasArray = [];
+    const respostasEspontaneasAssociadas = [];
+    const respostasEspontaneasNaoAssociadas = [];
+
+    pesquisas.forEach(p => {
+      const resposta = buscarResposta(p.pergunta_resposta, '1.1');
+      if (resposta) {
+        const item = { resposta, pesquisaId: p.id };
+        respostasEspontaneasArray.push(item);
+
+        if (contemReferenciaBB(resposta)) {
+          respostasEspontaneasAssociadas.push(item);
+        } else {
+          respostasEspontaneasNaoAssociadas.push(item);
+        }
+      }
+    });
+
+    const percEspontanea = respostasEspontaneasArray.length > 0
+      ? (respostasEspontaneasAssociadas.length / respostasEspontaneasArray.length) * 100
       : 0;
 
-    // 1.2 Estimulada - % que responderam BB sob o total de perguntados
-    const respostasEstimuladas = pesquisas.filter(p => p.associacao_estimulada !== null);
-    const respostasBBEstimulada = respostasEstimuladas.filter(p => p.associacao_estimulada === true).length;
-    const percEstimulada = respostasEstimuladas.length > 0
-      ? (respostasBBEstimulada / respostasEstimuladas.length) * 100
+    // 1.2 Estimulada - % que responderam BB ou Banco do Brasil
+    const respostasEstimuladasArray = [];
+    const respostasEstimuladasAssociadas = [];
+    const respostasEstimuladasNaoAssociadas = [];
+
+    pesquisas.forEach(p => {
+      const resposta = buscarResposta(p.pergunta_resposta, '1.2');
+      if (resposta) {
+        const item = { resposta, pesquisaId: p.id };
+        respostasEstimuladasArray.push(item);
+
+        if (contemReferenciaBB(resposta)) {
+          respostasEstimuladasAssociadas.push(item);
+        } else {
+          respostasEstimuladasNaoAssociadas.push(item);
+        }
+      }
+    });
+
+    const percEstimulada = respostasEstimuladasArray.length > 0
+      ? (respostasEstimuladasAssociadas.length / respostasEstimuladasArray.length) * 100
       : 0;
 
     // IEM Conhecimento = 2/3 x % Espontânea + 1/3 x % Estimulada
@@ -776,16 +865,24 @@ export const DataProvider = ({ children }) => {
       perguntas: [
         {
           pergunta: 'Associação Espontânea (% que respondeu BB)',
-          percentual: parseFloat(percEspontanea.toFixed(1)),
-          total: respostasEspontaneas.length
+          percentual: parseFloat(percEspontanea.toFixed(2)),
+          total: respostasEspontaneasArray.length,
+          respostasAssociadas: respostasEspontaneasAssociadas,
+          respostasNaoAssociadas: respostasEspontaneasNaoAssociadas,
+          totalAssociadas: respostasEspontaneasAssociadas.length,
+          totalNaoAssociadas: respostasEspontaneasNaoAssociadas.length
         },
         {
           pergunta: 'Associação Estimulada (% que respondeu BB)',
-          percentual: parseFloat(percEstimulada.toFixed(1)),
-          total: respostasEstimuladas.length
+          percentual: parseFloat(percEstimulada.toFixed(2)),
+          total: respostasEstimuladasArray.length,
+          respostasAssociadas: respostasEstimuladasAssociadas,
+          respostasNaoAssociadas: respostasEstimuladasNaoAssociadas,
+          totalAssociadas: respostasEstimuladasAssociadas.length,
+          totalNaoAssociadas: respostasEstimuladasNaoAssociadas.length
         }
       ],
-      iem: parseFloat(iemConhecimento.toFixed(1))
+      iem: parseFloat(iemConhecimento.toFixed(2))
     };
 
     // ============================================
@@ -793,10 +890,32 @@ export const DataProvider = ({ children }) => {
     // ============================================
     // Metodologia: Média dos aspectos [4] + (Grau de Satisfação Geral [5] x 3) / 4
 
-    const comunicacaoDivulgacao = pesquisas.filter(p => p.comunicacao_divulgacao !== null).map(p => parseFloat(p.comunicacao_divulgacao));
-    const estruturaAmbientacao = pesquisas.filter(p => p.estrutura_ambientacao !== null).map(p => parseFloat(p.estrutura_ambientacao));
-    const atividadesConteudo = pesquisas.filter(p => p.atividades_conteudo !== null).map(p => parseFloat(p.atividades_conteudo));
-    const avaliacaoGeral = pesquisas.filter(p => p.avaliacao_geral !== null).map(p => parseFloat(p.avaliacao_geral));
+    const comunicacaoDivulgacao = [];
+    const estruturaAmbientacao = [];
+    const atividadesConteudo = [];
+    const avaliacaoGeral = [];
+
+    pesquisas.forEach(p => {
+      // 4.a Comunicação e divulgação
+      const resp4a = buscarResposta(p.pergunta_resposta, '4.a');
+      const valor4a = extrairValorNumerico(resp4a);
+      if (valor4a !== null) comunicacaoDivulgacao.push(valor4a);
+
+      // 4.b Estrutura e ambientação
+      const resp4b = buscarResposta(p.pergunta_resposta, '4.b');
+      const valor4b = extrairValorNumerico(resp4b);
+      if (valor4b !== null) estruturaAmbientacao.push(valor4b);
+
+      // 4.c Atividades e conteúdo
+      const resp4c = buscarResposta(p.pergunta_resposta, '4.c');
+      const valor4c = extrairValorNumerico(resp4c);
+      if (valor4c !== null) atividadesConteudo.push(valor4c);
+
+      // 5. Avaliação geral
+      const resp5 = buscarResposta(p.pergunta_resposta, '5.');
+      const valor5 = extrairValorNumerico(resp5);
+      if (valor5 !== null) avaliacaoGeral.push(valor5);
+    });
 
     // Média dos 3 aspectos
     const todosAspectos = [...comunicacaoDivulgacao, ...estruturaAmbientacao, ...atividadesConteudo];
@@ -832,7 +951,7 @@ export const DataProvider = ({ children }) => {
           ...calcularEstatisticas(avaliacaoGeral)
         }
       ],
-      iem: parseFloat(iemSatisfacao.toFixed(1))
+      iem: parseFloat(iemSatisfacao.toFixed(2))
     };
 
     // ============================================
@@ -840,8 +959,20 @@ export const DataProvider = ({ children }) => {
     // ============================================
     // Metodologia: Média simples dos dois statements
 
-    const posicionamento1 = pesquisas.filter(p => p.posicionamento_socioambiental !== null).map(p => parseFloat(p.posicionamento_socioambiental));
-    const posicionamento2 = pesquisas.filter(p => p.posicionamento_sustentabilidade !== null).map(p => parseFloat(p.posicionamento_sustentabilidade));
+    const posicionamento1 = [];
+    const posicionamento2 = [];
+
+    pesquisas.forEach(p => {
+      // 6. Posicionamento socioambiental
+      const resp6 = buscarResposta(p.pergunta_resposta, '6.');
+      const valor6 = extrairValorNumerico(resp6);
+      if (valor6 !== null) posicionamento1.push(valor6);
+
+      // 7. Posicionamento sustentabilidade
+      const resp7 = buscarResposta(p.pergunta_resposta, '7.');
+      const valor7 = extrairValorNumerico(resp7);
+      if (valor7 !== null) posicionamento2.push(valor7);
+    });
 
     const todosPosicionamento = [...posicionamento1, ...posicionamento2];
     const statsPosicionamento = calcularEstatisticas(todosPosicionamento);
@@ -859,7 +990,7 @@ export const DataProvider = ({ children }) => {
           ...calcularEstatisticas(posicionamento2)
         }
       ],
-      iem: parseFloat(iemPosicionamento.toFixed(1))
+      iem: parseFloat(iemPosicionamento.toFixed(2))
     };
 
     // ============================================
@@ -867,8 +998,20 @@ export const DataProvider = ({ children }) => {
     // ============================================
     // Metodologia: Média simples dos dois statements
 
-    const territorios1 = pesquisas.filter(p => p.territorios_preservacao !== null).map(p => parseFloat(p.territorios_preservacao));
-    const territorios2 = pesquisas.filter(p => p.territorios_debate !== null).map(p => parseFloat(p.territorios_debate));
+    const territorios1 = [];
+    const territorios2 = [];
+
+    pesquisas.forEach(p => {
+      // 8. Territórios preservação
+      const resp8 = buscarResposta(p.pergunta_resposta, '8.');
+      const valor8 = extrairValorNumerico(resp8);
+      if (valor8 !== null) territorios1.push(valor8);
+
+      // 9. Territórios debate
+      const resp9 = buscarResposta(p.pergunta_resposta, '9.');
+      const valor9 = extrairValorNumerico(resp9);
+      if (valor9 !== null) territorios2.push(valor9);
+    });
 
     const todosTerritorios = [...territorios1, ...territorios2];
     const statsTerritorios = calcularEstatisticas(todosTerritorios);
@@ -886,7 +1029,7 @@ export const DataProvider = ({ children }) => {
           ...calcularEstatisticas(territorios2)
         }
       ],
-      iem: parseFloat(iemTerritorios.toFixed(1))
+      iem: parseFloat(iemTerritorios.toFixed(2))
     };
 
     // ============================================
@@ -894,8 +1037,20 @@ export const DataProvider = ({ children }) => {
     // ============================================
     // Metodologia: Soma das notas 4 e 5 (Top 2 Box)
 
-    const intencaoCliente = pesquisas.filter(p => p.intencao_tornar_cliente !== null).map(p => parseFloat(p.intencao_tornar_cliente));
-    const intencaoAmpliar = pesquisas.filter(p => p.intencao_ampliar_relacionamento !== null).map(p => parseFloat(p.intencao_ampliar_relacionamento));
+    const intencaoCliente = [];
+    const intencaoAmpliar = [];
+
+    pesquisas.forEach(p => {
+      // 10.1 Intenção de se tornar cliente
+      const resp10_1 = buscarResposta(p.pergunta_resposta, '10.1');
+      const valor10_1 = extrairValorNumerico(resp10_1);
+      if (valor10_1 !== null) intencaoCliente.push(valor10_1);
+
+      // 10.2 Intenção de ampliar relacionamento
+      const resp10_2 = buscarResposta(p.pergunta_resposta, '10.2');
+      const valor10_2 = extrairValorNumerico(resp10_2);
+      if (valor10_2 !== null) intencaoAmpliar.push(valor10_2);
+    });
 
     const todosIntencao = [...intencaoCliente, ...intencaoAmpliar];
     const top2BoxIntencao = calcularTop2Box(todosIntencao);
@@ -915,48 +1070,53 @@ export const DataProvider = ({ children }) => {
           ...calcularTop2Box(intencaoAmpliar)
         }
       ],
-      iem: parseFloat(iemIntencao.toFixed(1))
+      iem: parseFloat(iemIntencao.toFixed(2))
     };
 
     // Coment�rios qualitativos
-    const comentarios = pesquisas
-      .filter(p => p.comentario_qualitativo && p.comentario_qualitativo.trim() !== '')
-      .map(p => {
-        // Buscar usu�rio da pesquisa
-        const link = pesquisasUsuariosLnk.find(l => l.pesquisa_experiencia_id === p.id);
-        const usuario = link ? usuarios.find(u => u.id === link.user_id) : null;
+    const comentarios = [];
+    pesquisas.forEach(p => {
+      if (!p.pergunta_resposta || !Array.isArray(p.pergunta_resposta)) return;
 
-        // Fun��o para calcular idade
-        const calcularIdade = (dataNascimento) => {
-          if (!dataNascimento) return null;
-          const hoje = new Date();
-          const nascimento = new Date(dataNascimento);
-          let idade = hoje.getFullYear() - nascimento.getFullYear();
-          const m = hoje.getMonth() - nascimento.getMonth();
-          if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
-            idade--;
-          }
-          return idade;
-        };
+      // Buscar comentário no array pergunta_resposta
+      const itemComentario = p.pergunta_resposta.find(pr => pr.comentario);
+      if (!itemComentario || !itemComentario.comentario || itemComentario.comentario.trim() === '') return;
 
-        // Determinar faixa et�ria
-        const determinarFaixaEtaria = (dataNascimento) => {
-          const idade = calcularIdade(dataNascimento);
-          if (!idade) return 'Não informado';
-          if (idade < 18) return 'Menor de 18 anos';
-          if (idade <= 24) return 'Entre 18 e 24 anos';
-          if (idade <= 40) return 'Entre 25 e 40 anos';
-          if (idade <= 59) return 'Entre 41 e 59 anos';
-          return '60 anos ou mais';
-        };
+      // Buscar usu�rio da pesquisa
+      const link = pesquisasUsuariosLnk.find(l => l.pesquisa_experiencia_id === p.id);
+      const usuario = link ? usuarios.find(u => u.id === link.user_id) : null;
 
-        return {
-          comentario: p.comentario_qualitativo,
-          faixaEtaria: usuario ? determinarFaixaEtaria(usuario.data_usuario) : 'Não informado',
-          clienteBB: usuario?.tenho_conta ? 'Sim' : 'Não',
-          data: p.created_at
-        };
+      // Fun��o para calcular idade
+      const calcularIdade = (dataNascimento) => {
+        if (!dataNascimento) return null;
+        const hoje = new Date();
+        const nascimento = new Date(dataNascimento);
+        let idade = hoje.getFullYear() - nascimento.getFullYear();
+        const m = hoje.getMonth() - nascimento.getMonth();
+        if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+          idade--;
+        }
+        return idade;
+      };
+
+      // Determinar faixa et�ria
+      const determinarFaixaEtaria = (dataNascimento) => {
+        const idade = calcularIdade(dataNascimento);
+        if (!idade) return 'Não informado';
+        if (idade < 18) return 'Menor de 18 anos';
+        if (idade <= 24) return 'Entre 18 e 24 anos';
+        if (idade <= 40) return 'Entre 25 e 40 anos';
+        if (idade <= 59) return 'Entre 41 e 59 anos';
+        return '60 anos ou mais';
+      };
+
+      comentarios.push({
+        comentario: itemComentario.comentario,
+        faixaEtaria: usuario ? determinarFaixaEtaria(usuario.data_usuario) : 'Não informado',
+        clienteBB: usuario?.tenho_conta ? 'Sim' : 'Não',
+        data: p.created_at
       });
+    });
 
     // ============================================
     // CÁLCULO DO IEM GERAL
@@ -973,7 +1133,7 @@ export const DataProvider = ({ children }) => {
 
     return {
       totalRespostas: pesquisas.length,
-      iemGeral: parseFloat(iemGeral.toFixed(1)),
+      iemGeral: parseFloat(iemGeral.toFixed(2)),
       blocoConhecimento,
       blocoSatisfacao,
       blocoPosicionamento,

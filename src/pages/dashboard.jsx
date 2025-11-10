@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BarChart, Bar, Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { useData } from '../context/DataContext';
 import Filtros from '../components/Filtros';
 
@@ -8,6 +9,9 @@ const Dashboard = () => {
   const { loading, error, getMetrics, getCheckInsPorAtivacao, getCheckInsPorDia, getPicosPorHorario, getFunnelData, getDistribuicaoFaixaEtaria, getDistribuicaoBase, getAnalisePesquisa, filters, updateFilters } = useData();
   const [ativacaoSelecionada, setAtivacaoSelecionada] = useState(null);
   const [dataSelecionadaPicos, setDataSelecionadaPicos] = useState(null);
+  const [modalRespostasAberto, setModalRespostasAberto] = useState(false);
+  const [dadosModalRespostas, setDadosModalRespostas] = useState(null);
+  const [tabAtivaModal, setTabAtivaModal] = useState('associadas');
 
   // Obter métricas do contexto
   const metrics = getMetrics();
@@ -47,6 +51,20 @@ const Dashboard = () => {
         ativacaoSelecionada: data.id
       });
     }
+  };
+
+  // Handler para abrir modal de respostas
+  const handleAbrirModalRespostas = (perguntaDados) => {
+    setDadosModalRespostas(perguntaDados);
+    setTabAtivaModal('associadas'); // Sempre começar na primeira tab
+    setModalRespostasAberto(true);
+  };
+
+  // Handler para fechar modal de respostas
+  const handleFecharModalRespostas = () => {
+    setModalRespostasAberto(false);
+    setDadosModalRespostas(null);
+    setTabAtivaModal('associadas');
   };
 
   // Tooltip customizado para gráfico de ativações
@@ -178,12 +196,12 @@ const Dashboard = () => {
 
       {/* Cards de Métricas */}
       <div className="row g-3 mb-4">
-        <div className="col-md-3">
+        <div className="col-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <h6 className="card-subtitle mb-2 text-muted">Total de Usuários com Ativações</h6>                  
+                  <h6 className="card-subtitle mb-2 text-muted">Total de Usuários com Ativações</h6>
                   <h2 className="card-title mb-0 mt-2" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#0d6efd' }}>
                     {metrics.totalUsuariosComAtivacoes}
                   </h2>
@@ -198,7 +216,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center">
@@ -218,32 +236,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="col-md-3">
+        <div className="col-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center">
                 <div>
-                  <h6 className="card-subtitle mb-2 text-muted">Total de Resgates</h6>
-                  <h2 className="card-title mb-0 mt-2" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#dc3545' }}>
-                    {metrics.totalResgates}
-                  </h2>
-                </div>
-                <div className="bg-danger bg-opacity-10 rounded-circle p-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#dc3545" className="bi bi-gift-fill" viewBox="0 0 16 16">
-                    <path d="M3 2.5a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1 5 0v.006c0 .07 0 .27-.038.494H15a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h2.038A2.968 2.968 0 0 1 3 2.506V2.5zm1.068.5H7v-.5a1.5 1.5 0 1 0-3 0c0 .085.002.274.045.43a.522.522 0 0 0 .023.07zM9 3h2.932a.56.56 0 0 0 .023-.07c.043-.156.045-.345.045-.43a1.5 1.5 0 0 0-3 0V3zM1 4v.5h3.5V4H1zm5.5 0v.5h3V4h-3zm4.5 0v.5H15V4h-4zM0 5.5V14a1 1 0 0 0 1 1h6V5.5H0zm8 0V15h6a1 1 0 0 0 1-1V5.5H8z"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="card-subtitle mb-2 text-muted">IEM Geral Pesquisa</h6>                  
+                  <h6 className="card-subtitle mb-2 text-muted">IEM Geral Pesquisa</h6>
                   <h2 className="card-title mb-0 mt-2" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#6f42c1' }}>
                     {dadosPesquisa ? dadosPesquisa.iemGeral : 0}%
                   </h2>
@@ -659,37 +657,64 @@ const Dashboard = () => {
           <div className="row g-4 mb-4">
             {/* Bloco de Conhecimento */}
             <div className="col-md-6">
-              <div className="card border-0 shadow-sm h-100" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
-                <div className="card-body text-white">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h4 className="card-title mb-0">
-                      <span style={{ fontSize: '1.5rem' }}>🧠</span> {dadosPesquisa.blocoConhecimento.titulo}
-                    </h4>
-                    {/* IEM do Bloco - Minimalista */}
-                    <div className="text-end" style={{ minWidth: '80px' }}>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>IEM</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                        {dadosPesquisa.blocoConhecimento.iem}<span style={{ fontSize: '1rem' }}>%</span>
+              <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#ffffff' }}>
+                <div className="card-body">
+                  {/* Cabeçalho com gradiente */}
+                  <div className="p-3 rounded mb-4" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+                    <div className="d-flex justify-content-between align-items-start text-white">
+                      <h4 className="mb-0" style={{ fontWeight: 'bold' }}>
+                        <span style={{ fontSize: '1.5rem' }}>🧠</span> {dadosPesquisa.blocoConhecimento.titulo}
+                      </h4>
+                      {/* IEM do Bloco */}
+                      <div className="text-end" style={{ minWidth: '80px' }}>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
+                          {dadosPesquisa.blocoConhecimento.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Perguntas */}
-                  <div className="mt-3">
-                    <p className="mb-3" style={{ fontSize: '0.95rem', fontWeight: '600' }}>Perguntas incluídas:</p>
+                  <div>
+                    <p className="mb-3 text-muted" style={{ fontSize: '0.9rem', fontWeight: '600' }}>Perguntas incluídas (clique para ver detalhes):</p>
                     {dadosPesquisa.blocoConhecimento.perguntas.map((item, index) => (
-                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <div className="mb-2" style={{ fontSize: '0.9rem' }}>
+                      <div
+                        key={index}
+                        className="mb-3 p-3 rounded"
+                        onClick={() => handleAbrirModalRespostas(item)}
+                        style={{
+                          backgroundColor: '#f8f9fa',
+                          borderLeft: '4px solid #fa709a',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#e9ecef';
+                          e.currentTarget.style.transform = 'translateX(5px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f8f9fa';
+                          e.currentTarget.style.transform = 'translateX(0)';
+                        }}
+                      >
+                        <div className="mb-2" style={{ fontSize: '0.9rem', color: '#495057', lineHeight: '1.5' }}>
                           {index + 1}. {item.pergunta}
                         </div>
-                        <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Percentual: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.percentual}%</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Percentual: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#fa709a' }}>{item.percentual}%</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.total} respostas</span>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>{item.total} respostas</span>
                           </div>
+                        </div>
+                        <div className="mt-2">
+                          <small className="text-muted">
+                            <span className="badge bg-success me-1">{item.totalAssociadas} associadas</span>
+                            <span className="badge bg-secondary">{item.totalNaoAssociadas} não associadas</span>
+                          </small>
                         </div>
                       </div>
                     ))}
@@ -700,40 +725,43 @@ const Dashboard = () => {
 
             {/* Bloco de Satisfação */}
             <div className="col-md-6">
-              <div className="card border-0 shadow-sm h-100" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-                <div className="card-body text-white">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h4 className="card-title mb-0">
-                      <span style={{ fontSize: '1.5rem' }}>😊</span> {dadosPesquisa.blocoSatisfacao.titulo}
-                    </h4>
-                    {/* IEM do Bloco - Minimalista */}
-                    <div className="text-end" style={{ minWidth: '80px' }}>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>IEM</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                        {dadosPesquisa.blocoSatisfacao.iem}<span style={{ fontSize: '1rem' }}>%</span>
+              <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#ffffff' }}>
+                <div className="card-body">
+                  {/* Cabeçalho com gradiente */}
+                  <div className="p-3 rounded mb-4" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                    <div className="d-flex justify-content-between align-items-start text-white">
+                      <h4 className="mb-0" style={{ fontWeight: 'bold' }}>
+                        <span style={{ fontSize: '1.5rem' }}>😊</span> {dadosPesquisa.blocoSatisfacao.titulo}
+                      </h4>
+                      {/* IEM do Bloco */}
+                      <div className="text-end" style={{ minWidth: '80px' }}>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
+                          {dadosPesquisa.blocoSatisfacao.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Perguntas */}
-                  <div className="mt-3">
-                    <p className="mb-3" style={{ fontSize: '0.95rem', fontWeight: '600' }}>Perguntas incluídas:</p>
+                  <div>
+                    <p className="mb-3 text-muted" style={{ fontSize: '0.9rem', fontWeight: '600' }}>Perguntas incluídas:</p>
                     {dadosPesquisa.blocoSatisfacao.perguntas.map((item, index) => (
-                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <div className="mb-2" style={{ fontSize: '0.9rem' }}>
+                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #667eea' }}>
+                        <div className="mb-2" style={{ fontSize: '0.9rem', color: '#495057', lineHeight: '1.5' }}>
                           {index + 1}. {item.pergunta}
                         </div>
-                        <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Média: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.media}</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Média: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#667eea' }}>{item.media}</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Grau: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.grau}%</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Grau: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#667eea' }}>{item.grau}%</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.total} respostas</span>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>{item.total} respostas</span>
                           </div>
                         </div>
                       </div>
@@ -745,41 +773,44 @@ const Dashboard = () => {
 
             {/* Bloco de Intenção de Relacionamento */}
             <div className="col-md-6">
-              <div className="card border-0 shadow-sm h-100" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
-                <div className="card-body text-white">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h4 className="card-title mb-0">
-                      <span style={{ fontSize: '1.5rem' }}>🤝</span> {dadosPesquisa.blocoIntencao.titulo}
-                    </h4>
-                    {/* IEM do Bloco - Minimalista */}
-                    <div className="text-end" style={{ minWidth: '80px' }}>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>IEM</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                        {dadosPesquisa.blocoIntencao.iem}<span style={{ fontSize: '1rem' }}>%</span>
+              <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#ffffff' }}>
+                <div className="card-body">
+                  {/* Cabeçalho com gradiente */}
+                  <div className="p-3 rounded mb-4" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+                    <div className="d-flex justify-content-between align-items-start text-white">
+                      <h4 className="mb-0" style={{ fontWeight: 'bold' }}>
+                        <span style={{ fontSize: '1.5rem' }}>🤝</span> {dadosPesquisa.blocoIntencao.titulo}
+                      </h4>
+                      {/* IEM do Bloco */}
+                      <div className="text-end" style={{ minWidth: '80px' }}>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
+                          {dadosPesquisa.blocoIntencao.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                        </div>
+                        <div style={{ fontSize: '0.6rem', opacity: 0.85 }}>Top 2 Box</div>
                       </div>
-                      <div style={{ fontSize: '0.6rem', opacity: 0.75 }}>Top 2 Box</div>
                     </div>
                   </div>
 
                   {/* Perguntas */}
-                  <div className="mt-3">
-                    <p className="mb-3" style={{ fontSize: '0.95rem', fontWeight: '600' }}>Perguntas incluídas:</p>
+                  <div>
+                    <p className="mb-3 text-muted" style={{ fontSize: '0.9rem', fontWeight: '600' }}>Perguntas incluídas:</p>
                     {dadosPesquisa.blocoIntencao.perguntas.map((item, index) => (
-                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <div className="mb-2" style={{ fontSize: '0.9rem' }}>
+                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #f093fb' }}>
+                        <div className="mb-2" style={{ fontSize: '0.9rem', color: '#495057', lineHeight: '1.5' }}>
                           {index + 1}. {item.pergunta}
                         </div>
-                        <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Média: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.media}</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Média: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#f093fb' }}>{item.media}</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Top 2 Box: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.percentual}%</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Top 2 Box: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#f093fb' }}>{item.percentual}%</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.total} respostas</span>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>{item.total} respostas</span>
                           </div>
                         </div>
                       </div>
@@ -791,40 +822,43 @@ const Dashboard = () => {
 
             {/* Bloco Posicionamento */}
             <div className="col-md-6">
-              <div className="card border-0 shadow-sm h-100" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
-                <div className="card-body text-white">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h4 className="card-title mb-0">
-                      <span style={{ fontSize: '1.5rem' }}>🎯</span> {dadosPesquisa.blocoPosicionamento.titulo}
-                    </h4>
-                    {/* IEM do Bloco - Minimalista */}
-                    <div className="text-end" style={{ minWidth: '80px' }}>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>IEM</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                        {dadosPesquisa.blocoPosicionamento.iem}<span style={{ fontSize: '1rem' }}>%</span>
+              <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#ffffff' }}>
+                <div className="card-body">
+                  {/* Cabeçalho com gradiente */}
+                  <div className="p-3 rounded mb-4" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+                    <div className="d-flex justify-content-between align-items-start text-white">
+                      <h4 className="mb-0" style={{ fontWeight: 'bold' }}>
+                        <span style={{ fontSize: '1.5rem' }}>🎯</span> {dadosPesquisa.blocoPosicionamento.titulo}
+                      </h4>
+                      {/* IEM do Bloco */}
+                      <div className="text-end" style={{ minWidth: '80px' }}>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
+                          {dadosPesquisa.blocoPosicionamento.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Perguntas */}
-                  <div className="mt-3">
-                    <p className="mb-3" style={{ fontSize: '0.95rem', fontWeight: '600' }}>Perguntas incluídas:</p>
+                  <div>
+                    <p className="mb-3 text-muted" style={{ fontSize: '0.9rem', fontWeight: '600' }}>Perguntas incluídas:</p>
                     {dadosPesquisa.blocoPosicionamento.perguntas.map((item, index) => (
-                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <div className="mb-2" style={{ fontSize: '0.9rem' }}>
+                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #4facfe' }}>
+                        <div className="mb-2" style={{ fontSize: '0.9rem', color: '#495057', lineHeight: '1.5' }}>
                           {index + 1}. {item.pergunta}
                         </div>
-                        <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Média: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.media}</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Média: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#4facfe' }}>{item.media}</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Grau: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.grau}%</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Grau: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#4facfe' }}>{item.grau}%</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.total} respostas</span>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>{item.total} respostas</span>
                           </div>
                         </div>
                       </div>
@@ -836,40 +870,43 @@ const Dashboard = () => {
 
             {/* Bloco Territórios */}
             <div className="col-md-6">
-              <div className="card border-0 shadow-sm h-100" style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}>
-                <div className="card-body text-white">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <h4 className="card-title mb-0">
-                      <span style={{ fontSize: '1.5rem' }}>🌎</span> {dadosPesquisa.blocoTerritorios.titulo}
-                    </h4>
-                    {/* IEM do Bloco - Minimalista */}
-                    <div className="text-end" style={{ minWidth: '80px' }}>
-                      <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>IEM</div>
-                      <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                        {dadosPesquisa.blocoTerritorios.iem}<span style={{ fontSize: '1rem' }}>%</span>
+              <div className="card border-0 shadow-sm h-100" style={{ backgroundColor: '#ffffff' }}>
+                <div className="card-body">
+                  {/* Cabeçalho com gradiente */}
+                  <div className="p-3 rounded mb-4" style={{ background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }}>
+                    <div className="d-flex justify-content-between align-items-start text-white">
+                      <h4 className="mb-0" style={{ fontWeight: 'bold' }}>
+                        <span style={{ fontSize: '1.5rem' }}>🌎</span> {dadosPesquisa.blocoTerritorios.titulo}
+                      </h4>
+                      {/* IEM do Bloco */}
+                      <div className="text-end" style={{ minWidth: '80px' }}>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
+                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
+                          {dadosPesquisa.blocoTerritorios.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Perguntas */}
-                  <div className="mt-3">
-                    <p className="mb-3" style={{ fontSize: '0.95rem', fontWeight: '600' }}>Perguntas incluídas:</p>
+                  <div>
+                    <p className="mb-3 text-muted" style={{ fontSize: '0.9rem', fontWeight: '600' }}>Perguntas incluídas:</p>
                     {dadosPesquisa.blocoTerritorios.perguntas.map((item, index) => (
-                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <div className="mb-2" style={{ fontSize: '0.9rem' }}>
+                      <div key={index} className="mb-3 p-3 rounded" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #43e97b' }}>
+                        <div className="mb-2" style={{ fontSize: '0.9rem', color: '#495057', lineHeight: '1.5' }}>
                           {index + 1}. {item.pergunta}
                         </div>
-                        <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Média: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.media}</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Média: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#43e97b' }}>{item.media}</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Grau: </span>
-                            <strong style={{ fontSize: '1.1rem' }}>{item.grau}%</strong>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>Grau: </span>
+                            <strong style={{ fontSize: '1.1rem', color: '#43e97b' }}>{item.grau}%</strong>
                           </div>
                           <div>
-                            <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>{item.total} respostas</span>
+                            <span className="text-muted" style={{ fontSize: '0.85rem' }}>{item.total} respostas</span>
                           </div>
                         </div>
                       </div>
@@ -891,15 +928,29 @@ const Dashboard = () => {
                     </svg>
                     Comentários da Pesquisa de Satisfação
                   </h4>
-                  <p className="text-muted mb-4">Total de comentários: <strong>{dadosPesquisa.comentarios.length}</strong></p>
+                  <p className="text-muted mb-4">
+                    Total de comentários: <strong>{dadosPesquisa.comentarios.length}</strong>
+                    {dadosPesquisa.comentarios.length > 10 && (
+                      <span className="ms-2 text-muted" style={{ fontSize: '0.9rem' }}>
+                        (Mostrando 10 de {dadosPesquisa.comentarios.length})
+                      </span>
+                    )}
+                  </p>
 
                   {dadosPesquisa.comentarios.length === 0 ? (
                     <div className="alert alert-info">
                       <p className="mb-0">Nenhum comentário disponível.</p>
                     </div>
                   ) : (
-                    <div className="row g-3">
-                      {dadosPesquisa.comentarios.map((item, index) => (
+                    <div
+                      className="row g-3"
+                      style={{
+                        maxHeight: '600px',
+                        overflowY: 'auto',
+                        paddingRight: '10px'
+                      }}
+                    >
+                      {dadosPesquisa.comentarios.slice(0, 10).map((item, index) => (
                         <div key={index} className="col-12">
                           <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #0d6efd' }}>
                             <p className="mb-2" style={{ fontSize: '1rem', lineHeight: '1.6' }}>{item.comentario}</p>
@@ -933,6 +984,128 @@ const Dashboard = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Modal de Respostas do Bloco de Conhecimento */}
+      {modalRespostasAberto && dadosModalRespostas && (
+        <div
+          className="modal fade show"
+          style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}
+          tabIndex="-1"
+          onClick={handleFecharModalRespostas}
+        >
+          <div
+            className="modal-dialog modal-lg modal-dialog-scrollable"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-content">
+              <div className="modal-header" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', color: 'white' }}>
+                <h5 className="modal-title">
+                  <strong>{dadosModalRespostas.pergunta}</strong>
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={handleFecharModalRespostas}
+                ></button>
+              </div>
+              <div className="modal-body">
+                {/* Estatísticas resumidas */}
+                <div className="row mb-4">
+                  <div className="col-md-4">
+                    <div className="text-center p-3 bg-light rounded">
+                      <div className="text-muted small">Total de Respostas</div>
+                      <div className="h3 mb-0">{dadosModalRespostas.total}</div>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="text-center p-3 rounded" style={{ backgroundColor: '#d1e7dd' }}>
+                      <div className="text-muted small">Associadas ao BB</div>
+                      <div className="h3 mb-0 text-success">{dadosModalRespostas.totalAssociadas}</div>
+                      <div className="small text-success">{dadosModalRespostas.percentual}%</div>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="text-center p-3 rounded" style={{ backgroundColor: '#e2e3e5' }}>
+                      <div className="text-muted small">Não Associadas</div>
+                      <div className="h3 mb-0 text-secondary">{dadosModalRespostas.totalNaoAssociadas}</div>
+                      <div className="small text-secondary">{(100 - dadosModalRespostas.percentual).toFixed(2)}%</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabs para alternar entre respostas associadas e não associadas */}
+                <ul className="nav nav-tabs mb-3" role="tablist">
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${tabAtivaModal === 'associadas' ? 'active' : ''}`}
+                      onClick={() => setTabAtivaModal('associadas')}
+                      type="button"
+                      role="tab"
+                    >
+                      Associadas ao BB ({dadosModalRespostas.totalAssociadas})
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${tabAtivaModal === 'nao-associadas' ? 'active' : ''}`}
+                      onClick={() => setTabAtivaModal('nao-associadas')}
+                      type="button"
+                      role="tab"
+                    >
+                      Não Associadas ({dadosModalRespostas.totalNaoAssociadas})
+                    </button>
+                  </li>
+                </ul>
+
+                <div className="tab-content">
+                  {/* Tab de Respostas Associadas */}
+                  {tabAtivaModal === 'associadas' && (
+                    <div className="tab-pane fade show active">
+                      {dadosModalRespostas.respostasAssociadas.length === 0 ? (
+                        <div className="alert alert-info">
+                          Nenhuma resposta associada ao BB.
+                        </div>
+                      ) : (
+                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                          {dadosModalRespostas.respostasAssociadas.map((item, index) => (
+                            <div key={index} className="p-3 mb-2 rounded border-start border-success border-4" style={{ backgroundColor: '#f8f9fa' }}>
+                              <p className="mb-0">{item.resposta}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tab de Respostas Não Associadas */}
+                  {tabAtivaModal === 'nao-associadas' && (
+                    <div className="tab-pane fade show active">
+                      {dadosModalRespostas.respostasNaoAssociadas.length === 0 ? (
+                        <div className="alert alert-info">
+                          Nenhuma resposta não associada.
+                        </div>
+                      ) : (
+                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                          {dadosModalRespostas.respostasNaoAssociadas.map((item, index) => (
+                            <div key={index} className="p-3 mb-2 rounded border-start border-secondary border-4" style={{ backgroundColor: '#f8f9fa' }}>
+                              <p className="mb-0">{item.resposta}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleFecharModalRespostas}>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
