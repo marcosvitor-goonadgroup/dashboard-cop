@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart, Bar, LineChart, Line, Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useData } from '../context/DataContext';
 import Filtros from '../components/Filtros';
