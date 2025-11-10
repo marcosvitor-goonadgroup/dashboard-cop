@@ -276,7 +276,7 @@ const Dashboard = () => {
                   <thead>
                     <tr>
                       <th>Faixa Etária</th>
-                      <th className="text-end">Quantidade</th>
+                      <th className="text-end" style={{ width: '100px' }}>Quantidade</th>
                       <th className="text-end">Percentual</th>
                     </tr>
                   </thead>
@@ -284,7 +284,7 @@ const Dashboard = () => {
                     {distribuicaoFaixaEtaria.map((item) => (
                       <tr key={item.faixa}>
                         <td>{item.label}</td>
-                        <td className="text-end">
+                        <td className="text-end" style={{ width: '100px' }}>
                           <span className="badge bg-primary">{item.quantidade}</span>
                         </td>
                         <td className="text-end">
