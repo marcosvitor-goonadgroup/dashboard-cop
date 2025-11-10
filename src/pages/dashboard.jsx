@@ -675,6 +675,36 @@ const Dashboard = () => {
                     </div>
                   </div>
 
+                  {/* Estatísticas Gerais */}
+                  <div className="mb-4 p-3 rounded" style={{ backgroundColor: '#fff3cd', border: '1px solid #ffc107' }}>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <small className="d-block text-muted mb-1">Total de Pesquisas:</small>
+                        <strong style={{ fontSize: '1.2rem', color: '#495057' }}>{dadosPesquisa.blocoConhecimento.totalPesquisas}</strong>
+                      </div>
+                      <div className="text-center">
+                        <small className="d-block text-muted mb-1">Lembraram:</small>
+                        <strong style={{ fontSize: '1.2rem', color: '#28a745' }}>{dadosPesquisa.blocoConhecimento.pessoasQueLembraram}</strong>
+                      </div>
+                      <div className="text-end">
+                        <small className="d-block text-muted mb-1">Não Lembraram:</small>
+                        <strong style={{ fontSize: '1.2rem', color: '#dc3545' }}>
+                          {dadosPesquisa.blocoConhecimento.pessoasQueNaoLembraram} ({dadosPesquisa.blocoConhecimento.percNaoLembraram}%)
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fórmula do IEM */}
+                  <div className="mb-3 p-2 rounded text-center" style={{ backgroundColor: '#e7f3ff', border: '1px dashed #0d6efd' }}>
+                    <small style={{ fontSize: '0.85rem', color: '#495057' }}>
+                      <strong>IEM = </strong>
+                      <span style={{ color: '#fa709a' }}>2/3 × Espontânea</span>
+                      {' + '}
+                      <span style={{ color: '#fa709a' }}>1/3 × Estimulada</span>
+                    </small>
+                  </div>
+
                   {/* Perguntas */}
                   <div>
                     <p className="mb-3 text-muted" style={{ fontSize: '0.9rem', fontWeight: '600' }}>Perguntas incluídas (clique para ver detalhes):</p>
@@ -698,8 +728,13 @@ const Dashboard = () => {
                           e.currentTarget.style.transform = 'translateX(0)';
                         }}
                       >
-                        <div className="mb-2" style={{ fontSize: '0.9rem', color: '#495057', lineHeight: '1.5' }}>
-                          {index + 1}. {item.pergunta}
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <div style={{ fontSize: '0.9rem', color: '#495057', lineHeight: '1.5', flex: 1 }}>
+                            {index + 1}. {item.pergunta}
+                          </div>
+                          <div className="ms-2 px-2 py-1 rounded" style={{ backgroundColor: '#fa709a', color: 'white', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                            Peso: {item.peso}
+                          </div>
                         </div>
                         <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>

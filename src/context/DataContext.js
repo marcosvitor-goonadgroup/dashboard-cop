@@ -749,12 +749,13 @@ export const DataProvider = ({ children }) => {
       return item?.resposta || null;
     };
 
-    // Fun��o auxiliar para calcular m�dia e grau de satisfa��o
+    // Função auxiliar para calcular média e grau de satisfação
+    // Escala de 1 a 5: Grau = ((média - 1) / 4) * 100
     const calcularEstatisticas = (valores) => {
       if (valores.length === 0) return { media: 0, grau: 0, total: 0 };
       const soma = valores.reduce((acc, val) => acc + val, 0);
       const media = soma / valores.length;
-      const grau = (media / 5) * 100;
+      const grau = ((media - 1) / 4) * 100;
       return {
         media: parseFloat(media.toFixed(2)),
         grau: parseFloat(grau.toFixed(2)),
@@ -875,6 +876,19 @@ export const DataProvider = ({ children }) => {
     // IEM Conhecimento = 2/3 x % Espontânea + 1/3 x % Estimulada
     const iemConhecimento = (2/3 * percEspontanea) + (1/3 * percEstimulada);
 
+    // Contar pessoas que não lembraram (não responderam nem 1.1 nem 1.2)
+    const pessoasQueNaoLembraram = pesquisas.filter(p => {
+      const resposta11 = buscarResposta(p.pergunta_resposta, '1.1 (Sim)');
+      const resposta12 = buscarResposta(p.pergunta_resposta, '1.2 (Sim)');
+      return (!resposta11 || resposta11.trim() === '') && (!resposta12 || resposta12.trim() === '');
+    }).length;
+
+    const totalPesquisas = pesquisas.length;
+    const pessoasQueLembraram = respostasEspontaneasArray.length + respostasEstimuladasArray.length;
+    const percNaoLembraram = totalPesquisas > 0
+      ? ((pessoasQueNaoLembraram / totalPesquisas) * 100).toFixed(2)
+      : 0;
+
     // 3. Pergunta aberta "O que te faz pensar isso?" - vinculada às respostas de 1.1 e 1.2
     const respostasPergunta3Array = [];
     const respostasPergunta3Associadas = [];
@@ -928,6 +942,7 @@ export const DataProvider = ({ children }) => {
         {
           pergunta: '1.1 Associação Espontânea (% que respondeu BB)',
           percentual: parseFloat(percEspontanea.toFixed(2)),
+          peso: '2/3',
           total: respostasEspontaneasArray.length,
           respostasAssociadas: respostasEspontaneasAssociadas,
           respostasNaoAssociadas: respostasEspontaneasNaoAssociadas,
@@ -937,6 +952,7 @@ export const DataProvider = ({ children }) => {
         {
           pergunta: '1.2 Associação Estimulada (% que respondeu BB)',
           percentual: parseFloat(percEstimulada.toFixed(2)),
+          peso: '1/3',
           total: respostasEstimuladasArray.length,
           respostasAssociadas: respostasEstimuladasAssociadas,
           respostasNaoAssociadas: respostasEstimuladasNaoAssociadas,
@@ -945,6 +961,11 @@ export const DataProvider = ({ children }) => {
         }
       ],
       iem: parseFloat(iemConhecimento.toFixed(2)),
+      // Estatísticas gerais
+      totalPesquisas: totalPesquisas,
+      pessoasQueLembraram: pessoasQueLembraram,
+      pessoasQueNaoLembraram: pessoasQueNaoLembraram,
+      percNaoLembraram: parseFloat(percNaoLembraram),
       // Manter dados da pergunta 3 disponíveis mas não no array de perguntas do card
       pergunta3: {
         pergunta: '3. O que te faz pensar isso?',
