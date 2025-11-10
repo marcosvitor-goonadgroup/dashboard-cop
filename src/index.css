@@ -1,0 +1,23 @@
+@font-face {
+  font-family: 'BancoDoBrasilTextos-Regular';
+  src: url('../public/fonts/BancoDoBrasilTextos-Regular.ttf') format('truetype');
+}
+
+body {
+  margin: 0;
+  font-family: 'BancoDoBrasilTextos-Regular', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image: url('../public/images/fundo_cop.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #f0f2f5;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
