@@ -804,25 +804,31 @@ export const DataProvider = ({ children }) => {
       if (!resposta) return false;
       const respostaLower = resposta.toLowerCase().trim();
 
-      // Verificar se a resposta é "sim"
-      if (respostaLower === 'sim') return true;
-
-      // Verificar se contém alguma variação do nome BB
+      // Verificar se contém alguma variação do nome BB (removido a verificação de "sim")
       return variacoesBB.some(variacao => respostaLower.includes(variacao));
     };
 
-    // 1.1 Espontânea - % que respondeu BB ou Banco do Brasil
+    // 1.1 Espontânea - % que respondeu BB ou Banco do Brasil na pergunta aberta "1.1 (Sim)"
     const respostasEspontaneasArray = [];
     const respostasEspontaneasAssociadas = [];
     const respostasEspontaneasNaoAssociadas = [];
 
     pesquisas.forEach(p => {
-      const resposta = buscarResposta(p.pergunta_resposta, '1.1');
-      if (resposta) {
-        const item = { resposta, pesquisaId: p.id };
+      // Buscar resposta aberta "1.1 (Sim) Qual marca se destacou na COP30?"
+      const resposta11Aberta = buscarResposta(p.pergunta_resposta, '1.1 (Sim)');
+      const resposta3 = buscarResposta(p.pergunta_resposta, '3.');
+
+      if (resposta11Aberta && resposta11Aberta.trim() !== '') {
+        const ehAssociada = contemReferenciaBB(resposta11Aberta);
+        const item = {
+          resposta: resposta11Aberta,
+          pesquisaId: p.id,
+          resposta3: resposta3 && resposta3.trim() !== '' ? resposta3 : null
+        };
+
         respostasEspontaneasArray.push(item);
 
-        if (contemReferenciaBB(resposta)) {
+        if (ehAssociada) {
           respostasEspontaneasAssociadas.push(item);
         } else {
           respostasEspontaneasNaoAssociadas.push(item);
@@ -834,18 +840,27 @@ export const DataProvider = ({ children }) => {
       ? (respostasEspontaneasAssociadas.length / respostasEspontaneasArray.length) * 100
       : 0;
 
-    // 1.2 Estimulada - % que responderam BB ou Banco do Brasil
+    // 1.2 Estimulada - % que responderam BB ou Banco do Brasil na pergunta aberta "1.2 (Sim)"
     const respostasEstimuladasArray = [];
     const respostasEstimuladasAssociadas = [];
     const respostasEstimuladasNaoAssociadas = [];
 
     pesquisas.forEach(p => {
-      const resposta = buscarResposta(p.pergunta_resposta, '1.2');
-      if (resposta) {
-        const item = { resposta, pesquisaId: p.id };
+      // Buscar resposta aberta "1.2 (Sim) Qual banco se destacou na COP30?"
+      const resposta12Aberta = buscarResposta(p.pergunta_resposta, '1.2 (Sim)');
+      const resposta3 = buscarResposta(p.pergunta_resposta, '3.');
+
+      if (resposta12Aberta && resposta12Aberta.trim() !== '') {
+        const ehAssociada = contemReferenciaBB(resposta12Aberta);
+        const item = {
+          resposta: resposta12Aberta,
+          pesquisaId: p.id,
+          resposta3: resposta3 && resposta3.trim() !== '' ? resposta3 : null
+        };
+
         respostasEstimuladasArray.push(item);
 
-        if (contemReferenciaBB(resposta)) {
+        if (ehAssociada) {
           respostasEstimuladasAssociadas.push(item);
         } else {
           respostasEstimuladasNaoAssociadas.push(item);
@@ -860,11 +875,58 @@ export const DataProvider = ({ children }) => {
     // IEM Conhecimento = 2/3 x % Espontânea + 1/3 x % Estimulada
     const iemConhecimento = (2/3 * percEspontanea) + (1/3 * percEstimulada);
 
+    // 3. Pergunta aberta "O que te faz pensar isso?" - vinculada às respostas de 1.1 e 1.2
+    const respostasPergunta3Array = [];
+    const respostasPergunta3Associadas = [];
+    const respostasPergunta3NaoAssociadas = [];
+
+    // Criar mapa de pesquisas com suas respostas 1.1 e 1.2
+    const mapaPesquisasComRespostas = new Map();
+
+    pesquisas.forEach(p => {
+      const resposta11 = buscarResposta(p.pergunta_resposta, '1.1 (Sim)');
+      const resposta12 = buscarResposta(p.pergunta_resposta, '1.2 (Sim)');
+      const resposta3 = buscarResposta(p.pergunta_resposta, '3.');
+
+      if (resposta3 && resposta3.trim() !== '') {
+        // Determinar qual resposta (1.1 ou 1.2) está associada
+        let respostaOriginal = null;
+        let ehAssociada = false;
+
+        if (resposta11 && resposta11.trim() !== '') {
+          respostaOriginal = resposta11;
+          ehAssociada = contemReferenciaBB(resposta11);
+        } else if (resposta12 && resposta12.trim() !== '') {
+          respostaOriginal = resposta12;
+          ehAssociada = contemReferenciaBB(resposta12);
+        }
+
+        const item = {
+          resposta: resposta3,
+          pesquisaId: p.id,
+          respostaOriginal: respostaOriginal || 'Não informada',
+          perguntaOrigem: resposta11 ? '1.1' : (resposta12 ? '1.2' : 'N/A')
+        };
+
+        respostasPergunta3Array.push(item);
+
+        if (ehAssociada) {
+          respostasPergunta3Associadas.push(item);
+        } else {
+          respostasPergunta3NaoAssociadas.push(item);
+        }
+      }
+    });
+
+    const percPergunta3 = respostasPergunta3Array.length > 0
+      ? (respostasPergunta3Associadas.length / respostasPergunta3Array.length) * 100
+      : 0;
+
     const blocoConhecimento = {
       titulo: 'Bloco de Conhecimento',
       perguntas: [
         {
-          pergunta: 'Associação Espontânea (% que respondeu BB)',
+          pergunta: '1.1 Associação Espontânea (% que respondeu BB)',
           percentual: parseFloat(percEspontanea.toFixed(2)),
           total: respostasEspontaneasArray.length,
           respostasAssociadas: respostasEspontaneasAssociadas,
@@ -873,7 +935,7 @@ export const DataProvider = ({ children }) => {
           totalNaoAssociadas: respostasEspontaneasNaoAssociadas.length
         },
         {
-          pergunta: 'Associação Estimulada (% que respondeu BB)',
+          pergunta: '1.2 Associação Estimulada (% que respondeu BB)',
           percentual: parseFloat(percEstimulada.toFixed(2)),
           total: respostasEstimuladasArray.length,
           respostasAssociadas: respostasEstimuladasAssociadas,
@@ -882,7 +944,17 @@ export const DataProvider = ({ children }) => {
           totalNaoAssociadas: respostasEstimuladasNaoAssociadas.length
         }
       ],
-      iem: parseFloat(iemConhecimento.toFixed(2))
+      iem: parseFloat(iemConhecimento.toFixed(2)),
+      // Manter dados da pergunta 3 disponíveis mas não no array de perguntas do card
+      pergunta3: {
+        pergunta: '3. O que te faz pensar isso?',
+        percentual: parseFloat(percPergunta3.toFixed(2)),
+        total: respostasPergunta3Array.length,
+        respostasAssociadas: respostasPergunta3Associadas,
+        respostasNaoAssociadas: respostasPergunta3NaoAssociadas,
+        totalAssociadas: respostasPergunta3Associadas.length,
+        totalNaoAssociadas: respostasPergunta3NaoAssociadas.length
+      }
     };
 
     // ============================================

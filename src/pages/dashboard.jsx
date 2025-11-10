@@ -243,7 +243,7 @@ const Dashboard = () => {
                 <div>
                   <h6 className="card-subtitle mb-2 text-muted">IEM Geral Pesquisa</h6>
                   <h2 className="card-title mb-0 mt-2" style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#6f42c1' }}>
-                    {dadosPesquisa ? dadosPesquisa.iemGeral : 0}%
+                    {dadosPesquisa ? dadosPesquisa.iemGeral.toFixed(2) : '0.00'}%
                   </h2>
                   <small className="text-muted">Experiência de Marca</small>
                 </div>
@@ -669,7 +669,7 @@ const Dashboard = () => {
                       <div className="text-end" style={{ minWidth: '80px' }}>
                         <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
                         <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                          {dadosPesquisa.blocoConhecimento.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                          {dadosPesquisa.blocoConhecimento.iem.toFixed(2)}<span style={{ fontSize: '1rem' }}>%</span>
                         </div>
                       </div>
                     </div>
@@ -737,7 +737,7 @@ const Dashboard = () => {
                       <div className="text-end" style={{ minWidth: '80px' }}>
                         <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
                         <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                          {dadosPesquisa.blocoSatisfacao.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                          {dadosPesquisa.blocoSatisfacao.iem.toFixed(2)}<span style={{ fontSize: '1rem' }}>%</span>
                         </div>
                       </div>
                     </div>
@@ -754,11 +754,11 @@ const Dashboard = () => {
                         <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>
                             <span className="text-muted" style={{ fontSize: '0.85rem' }}>Média: </span>
-                            <strong style={{ fontSize: '1.1rem', color: '#667eea' }}>{item.media}</strong>
+                            <strong style={{ fontSize: '1.1rem', color: '#667eea' }}>{item.media.toFixed(2)}</strong>
                           </div>
                           <div>
                             <span className="text-muted" style={{ fontSize: '0.85rem' }}>Grau: </span>
-                            <strong style={{ fontSize: '1.1rem', color: '#667eea' }}>{item.grau}%</strong>
+                            <strong style={{ fontSize: '1.1rem', color: '#667eea' }}>{item.grau.toFixed(2)}%</strong>
                           </div>
                           <div>
                             <span className="text-muted" style={{ fontSize: '0.85rem' }}>{item.total} respostas</span>
@@ -785,7 +785,7 @@ const Dashboard = () => {
                       <div className="text-end" style={{ minWidth: '80px' }}>
                         <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
                         <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                          {dadosPesquisa.blocoIntencao.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                          {dadosPesquisa.blocoIntencao.iem.toFixed(2)}<span style={{ fontSize: '1rem' }}>%</span>
                         </div>
                         <div style={{ fontSize: '0.6rem', opacity: 0.85 }}>Top 2 Box</div>
                       </div>
@@ -834,7 +834,7 @@ const Dashboard = () => {
                       <div className="text-end" style={{ minWidth: '80px' }}>
                         <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
                         <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                          {dadosPesquisa.blocoPosicionamento.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                          {dadosPesquisa.blocoPosicionamento.iem.toFixed(2)}<span style={{ fontSize: '1rem' }}>%</span>
                         </div>
                       </div>
                     </div>
@@ -882,7 +882,7 @@ const Dashboard = () => {
                       <div className="text-end" style={{ minWidth: '80px' }}>
                         <div style={{ fontSize: '0.7rem', opacity: 0.9 }}>IEM</div>
                         <div style={{ fontSize: '1.8rem', fontWeight: 'bold', lineHeight: 1 }}>
-                          {dadosPesquisa.blocoTerritorios.iem}<span style={{ fontSize: '1rem' }}>%</span>
+                          {dadosPesquisa.blocoTerritorios.iem.toFixed(2)}<span style={{ fontSize: '1rem' }}>%</span>
                         </div>
                       </div>
                     </div>
@@ -899,11 +899,11 @@ const Dashboard = () => {
                         <div className="d-flex justify-content-between align-items-center mt-2">
                           <div>
                             <span className="text-muted" style={{ fontSize: '0.85rem' }}>Média: </span>
-                            <strong style={{ fontSize: '1.1rem', color: '#43e97b' }}>{item.media}</strong>
+                            <strong style={{ fontSize: '1.1rem', color: '#43e97b' }}>{item.media.toFixed(2)}</strong>
                           </div>
                           <div>
                             <span className="text-muted" style={{ fontSize: '0.85rem' }}>Grau: </span>
-                            <strong style={{ fontSize: '1.1rem', color: '#43e97b' }}>{item.grau}%</strong>
+                            <strong style={{ fontSize: '1.1rem', color: '#43e97b' }}>{item.grau.toFixed(2)}%</strong>
                           </div>
                           <div>
                             <span className="text-muted" style={{ fontSize: '0.85rem' }}>{item.total} respostas</span>
@@ -930,11 +930,6 @@ const Dashboard = () => {
                   </h4>
                   <p className="text-muted mb-4">
                     Total de comentários: <strong>{dadosPesquisa.comentarios.length}</strong>
-                    {dadosPesquisa.comentarios.length > 10 && (
-                      <span className="ms-2 text-muted" style={{ fontSize: '0.9rem' }}>
-                        (Mostrando 10 de {dadosPesquisa.comentarios.length})
-                      </span>
-                    )}
                   </p>
 
                   {dadosPesquisa.comentarios.length === 0 ? (
@@ -950,7 +945,7 @@ const Dashboard = () => {
                         paddingRight: '10px'
                       }}
                     >
-                      {dadosPesquisa.comentarios.slice(0, 10).map((item, index) => (
+                      {dadosPesquisa.comentarios.map((item, index) => (
                         <div key={index} className="col-12">
                           <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa', borderLeft: '4px solid #0d6efd' }}>
                             <p className="mb-2" style={{ fontSize: '1rem', lineHeight: '1.6' }}>{item.comentario}</p>
@@ -1070,7 +1065,38 @@ const Dashboard = () => {
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                           {dadosModalRespostas.respostasAssociadas.map((item, index) => (
                             <div key={index} className="p-3 mb-2 rounded border-start border-success border-4" style={{ backgroundColor: '#f8f9fa' }}>
-                              <p className="mb-0">{item.resposta}</p>
+                              {/* Mostrar resposta da pergunta 1.1 ou 1.2 se for diferente de pergunta 3 */}
+                              {!item.respostaOriginal && (
+                                <>
+                                  <small className="text-muted d-block mb-1">
+                                    <strong>Resposta:</strong>
+                                  </small>
+                                  <p className="mb-0 text-success" style={{ fontSize: '0.95rem' }}>{item.resposta}</p>
+                                  {item.resposta3 && (
+                                    <div className="mt-3 pt-2" style={{ borderTop: '1px solid #dee2e6' }}>
+                                      <small className="text-muted d-block mb-1">
+                                        <strong>3. O que te faz pensar isso?</strong>
+                                      </small>
+                                      <p className="mb-0" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>{item.resposta3}</p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {/* Mostrar resposta da pergunta 3 com resposta original (para o modal da pergunta 3) */}
+                              {item.respostaOriginal && (
+                                <>
+                                  <div className="mb-2 pb-2" style={{ borderBottom: '1px solid #dee2e6' }}>
+                                    <small className="text-muted d-block mb-1">
+                                      <strong>Resposta original ({item.perguntaOrigem}):</strong>
+                                    </small>
+                                    <p className="mb-0 text-success" style={{ fontSize: '0.95rem' }}>{item.respostaOriginal}</p>
+                                  </div>
+                                  <small className="text-muted d-block mb-1">
+                                    <strong>Resposta da pergunta 3:</strong>
+                                  </small>
+                                  <p className="mb-0">{item.resposta}</p>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -1089,7 +1115,38 @@ const Dashboard = () => {
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                           {dadosModalRespostas.respostasNaoAssociadas.map((item, index) => (
                             <div key={index} className="p-3 mb-2 rounded border-start border-secondary border-4" style={{ backgroundColor: '#f8f9fa' }}>
-                              <p className="mb-0">{item.resposta}</p>
+                              {/* Mostrar resposta da pergunta 1.1 ou 1.2 se for diferente de pergunta 3 */}
+                              {!item.respostaOriginal && (
+                                <>
+                                  <small className="text-muted d-block mb-1">
+                                    <strong>Resposta:</strong>
+                                  </small>
+                                  <p className="mb-0 text-secondary" style={{ fontSize: '0.95rem' }}>{item.resposta}</p>
+                                  {item.resposta3 && (
+                                    <div className="mt-3 pt-2" style={{ borderTop: '1px solid #dee2e6' }}>
+                                      <small className="text-muted d-block mb-1">
+                                        <strong>3. O que te faz pensar isso?</strong>
+                                      </small>
+                                      <p className="mb-0" style={{ fontSize: '0.9rem', fontStyle: 'italic' }}>{item.resposta3}</p>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                              {/* Mostrar resposta da pergunta 3 com resposta original (para o modal da pergunta 3) */}
+                              {item.respostaOriginal && (
+                                <>
+                                  <div className="mb-2 pb-2" style={{ borderBottom: '1px solid #dee2e6' }}>
+                                    <small className="text-muted d-block mb-1">
+                                      <strong>Resposta original ({item.perguntaOrigem}):</strong>
+                                    </small>
+                                    <p className="mb-0 text-secondary" style={{ fontSize: '0.95rem' }}>{item.respostaOriginal}</p>
+                                  </div>
+                                  <small className="text-muted d-block mb-1">
+                                    <strong>Resposta da pergunta 3:</strong>
+                                  </small>
+                                  <p className="mb-0">{item.resposta}</p>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>
