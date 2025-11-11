@@ -894,9 +894,6 @@ export const DataProvider = ({ children }) => {
     const respostasPergunta3Associadas = [];
     const respostasPergunta3NaoAssociadas = [];
 
-    // Criar mapa de pesquisas com suas respostas 1.1 e 1.2
-    const mapaPesquisasComRespostas = new Map();
-
     pesquisas.forEach(p => {
       const resposta11 = buscarResposta(p.pergunta_resposta, '1.1 (Sim)');
       const resposta12 = buscarResposta(p.pergunta_resposta, '1.2 (Sim)');
