@@ -874,7 +874,15 @@ export const DataProvider = ({ children }) => {
       'banco brazil',
       'bancobrazil',
       'bancobrasileiro',
-      'banco brasileiro'
+      'banco brasileiro',
+      'Bando do Brasil',
+      'Branco do brasil',
+      'Bando do brasil',
+      'Bando do Brasil',
+      'Banco do Brasil',
+      'Banco só brasil',
+      'Bamco do Brasil',
+      'Branco do Brasil',      
     ];
 
     // Função auxiliar para verificar se a resposta contém referência ao BB
@@ -914,8 +922,9 @@ export const DataProvider = ({ children }) => {
       }
     });
 
-    const percEspontanea = respostasEspontaneasArray.length > 0
-      ? (respostasEspontaneasAssociadas.length / respostasEspontaneasArray.length) * 100
+    const totalPesquisas = pesquisas.length;
+    const percEspontanea = totalPesquisas > 0
+      ? (respostasEspontaneasAssociadas.length / totalPesquisas) * 100
       : 0;
 
     // 1.2 Estimulada - % que responderam BB ou Banco do Brasil na pergunta aberta "1.2 (Sim)"
@@ -960,7 +969,6 @@ export const DataProvider = ({ children }) => {
       return (!resposta11 || resposta11.trim() === '') && (!resposta12 || resposta12.trim() === '');
     }).length;
 
-    const totalPesquisas = pesquisas.length;
     const pessoasQueLembraram = respostasEspontaneasArray.length + respostasEstimuladasArray.length;
     const percNaoLembraram = totalPesquisas > 0
       ? ((pessoasQueNaoLembraram / totalPesquisas) * 100).toFixed(2)
@@ -1084,19 +1092,21 @@ export const DataProvider = ({ children }) => {
       if (valor5 !== null) avaliacaoGeral.push(valor5);
     });
 
-    // Média dos 3 aspectos
-    const todosAspectos = [...comunicacaoDivulgacao, ...estruturaAmbientacao, ...atividadesConteudo];
-    const mediaAspectos = todosAspectos.length > 0
-      ? todosAspectos.reduce((acc, val) => acc + val, 0) / todosAspectos.length
-      : 0;
-    const grauAspectos = (mediaAspectos / 5) * 100;
+    // Calcular o grau de cada aspecto individualmente
+    const statsComunicacao = calcularEstatisticas(comunicacaoDivulgacao);
+    const statsEstrutura = calcularEstatisticas(estruturaAmbientacao);
+    const statsAtividades = calcularEstatisticas(atividadesConteudo);
+
+    // Média dos graus dos 3 aspectos
+    const grausAspectos = [statsComunicacao.grau, statsEstrutura.grau, statsAtividades.grau];
+    const mediaDosGrausAspectos = grausAspectos.reduce((acc, val) => acc + val, 0) / 3;
 
     // Grau de Satisfação Geral
     const statsAvaliacaoGeral = calcularEstatisticas(avaliacaoGeral);
     const grauSatisfacaoGeral = statsAvaliacaoGeral.grau;
 
-    // IEM Satisfação = (Média dos aspectos + Grau de Satisfação Geral x 3) / 4
-    const iemSatisfacao = (grauAspectos + (grauSatisfacaoGeral * 3)) / 4;
+    // IEM Satisfação = (Média dos graus dos aspectos + Grau de Satisfação Geral x 3) / 4
+    const iemSatisfacao = (mediaDosGrausAspectos + (grauSatisfacaoGeral * 3)) / 4;
 
     const blocoSatisfacao = {
       titulo: 'Bloco de Satisfação',
