@@ -50,6 +50,20 @@ export const DataProvider = ({ children }) => {
       return data.tables;
     }
 
+    // Função auxiliar para verificar se uma data está dentro do intervalo
+    const dentroIntervaloData = (dataStr) => {
+      if (!dataStr) return true; // Se não tem data, não filtra
+
+      const data = new Date(dataStr);
+      const dataInicio = filters.dataInicio ? new Date(filters.dataInicio + 'T00:00:00') : null;
+      const dataFim = filters.dataFim ? new Date(filters.dataFim + 'T23:59:59') : null;
+
+      if (dataInicio && data < dataInicio) return false;
+      if (dataFim && data > dataFim) return false;
+
+      return true;
+    };
+
     // Fun��o auxiliar para calcular idade
     const calcularIdade = (dataNascimento) => {
       if (!dataNascimento) return null;
@@ -112,6 +126,69 @@ export const DataProvider = ({ children }) => {
           usuariosFiltradosIds = new Set([...usuariosFiltradosIds].filter(id => idsFaixa.has(id)));
         } else {
           usuariosFiltradosIds = idsFaixa;
+        }
+      }
+    }
+
+    // PASSO 1.5: Filtrar por data (checkins, resgates, pesquisas)
+    if (filters.dataInicio || filters.dataFim) {
+      // Filtrar checkins por data
+      if (filteredTables.checkins?.data) {
+        filteredTables.checkins.data = filteredTables.checkins.data.filter(checkin =>
+          dentroIntervaloData(checkin.created_at)
+        );
+
+        // Atualizar tabelas de relacionamento de checkins
+        const checkinIdsValidos = new Set(filteredTables.checkins.data.map(c => c.id));
+
+        if (filteredTables.checkins_ativacao_lnk?.data) {
+          filteredTables.checkins_ativacao_lnk.data = filteredTables.checkins_ativacao_lnk.data.filter(link =>
+            checkinIdsValidos.has(link.checkin_id)
+          );
+        }
+
+        if (filteredTables.checkins_users_permissions_user_lnk?.data) {
+          filteredTables.checkins_users_permissions_user_lnk.data = filteredTables.checkins_users_permissions_user_lnk.data.filter(link =>
+            checkinIdsValidos.has(link.checkin_id)
+          );
+        }
+      }
+
+      // Filtrar resgates por data
+      if (filteredTables.resgates?.data) {
+        filteredTables.resgates.data = filteredTables.resgates.data.filter(resgate =>
+          dentroIntervaloData(resgate.created_at)
+        );
+
+        // Atualizar tabelas de relacionamento de resgates
+        const resgateIdsValidos = new Set(filteredTables.resgates.data.map(r => r.id));
+
+        if (filteredTables.resgates_users_permissions_user_lnk?.data) {
+          filteredTables.resgates_users_permissions_user_lnk.data = filteredTables.resgates_users_permissions_user_lnk.data.filter(link =>
+            resgateIdsValidos.has(link.resgate_id)
+          );
+        }
+
+        if (filteredTables.resgates_brinde_lnk?.data) {
+          filteredTables.resgates_brinde_lnk.data = filteredTables.resgates_brinde_lnk.data.filter(link =>
+            resgateIdsValidos.has(link.resgate_id)
+          );
+        }
+      }
+
+      // Filtrar pesquisas por data
+      if (filteredTables.pesquisa_experiencias?.data) {
+        filteredTables.pesquisa_experiencias.data = filteredTables.pesquisa_experiencias.data.filter(pesquisa =>
+          dentroIntervaloData(pesquisa.created_at)
+        );
+
+        // Atualizar tabelas de relacionamento de pesquisas
+        const pesquisaIdsValidos = new Set(filteredTables.pesquisa_experiencias.data.map(p => p.id));
+
+        if (filteredTables.pesquisa_experiencias_users_permissions_user_lnk?.data) {
+          filteredTables.pesquisa_experiencias_users_permissions_user_lnk.data = filteredTables.pesquisa_experiencias_users_permissions_user_lnk.data.filter(link =>
+            pesquisaIdsValidos.has(link.pesquisa_experiencia_id)
+          );
         }
       }
     }

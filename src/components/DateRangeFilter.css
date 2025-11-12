@@ -1,0 +1,69 @@
+.date-range-modal .modal-dialog {
+  max-width: fit-content;
+}
+
+.date-range-filter-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.selected-range-info {
+  text-align: center;
+}
+
+/* Customizações do DateRangePicker */
+.custom-date-range-picker .rdrMonth {
+  padding: 0;
+}
+
+.custom-date-range-picker .rdrMonthAndYearWrapper {
+  padding-bottom: 1rem;
+}
+
+.custom-date-range-picker .rdrCalendarWrapper {
+  background: transparent;
+  color: inherit;
+}
+
+.custom-date-range-picker .rdrDateDisplayWrapper {
+  background-color: transparent;
+  display: none;
+}
+
+.custom-date-range-picker .rdrDayToday .rdrDayNumber span:after {
+  background: #0d6efd;
+}
+
+.custom-date-range-picker .rdrDay:not(.rdrDayPassive) .rdrInRange ~ .rdrDayNumber span,
+.custom-date-range-picker .rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
+.custom-date-range-picker .rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span,
+.custom-date-range-picker .rdrDay:not(.rdrDayPassive) .rdrSelected ~ .rdrDayNumber span {
+  color: #fff;
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .date-range-filter-container {
+    flex-direction: column;
+  }
+
+  .date-range-sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .date-range-calendar {
+    overflow-x: auto;
+  }
+
+  .custom-date-range-picker .rdrCalendarWrapper {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .custom-date-range-picker .rdrMonths {
+    flex-direction: column;
+  }
+}

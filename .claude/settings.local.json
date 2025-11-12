@@ -1,7 +1,18 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm start)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(taskkill:*)",
+      "Bash(dir node_modulesdate-fns)",
+      "Bash(dir /b node_modules)",
+      "Bash(findstr:*)",
+      "Bash(powershell -Command \"if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }\")",
+      "Bash(powershell -Command \"if (Test-Path package-lock.json) { Remove-Item -Force package-lock.json }\")",
+      "Bash(nul)"
     ],
     "deny": [],
     "ask": []

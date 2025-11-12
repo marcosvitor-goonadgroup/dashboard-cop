@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Offcanvas, Button, Form } from 'react-bootstrap';
 import { useData } from '../context/DataContext';
+import DateRangeFilter from './DateRangeFilter';
 
 const Filtros = () => {
   const {
@@ -11,8 +12,11 @@ const Filtros = () => {
   } = useData();
 
   const [showOffcanvas, setShowOffcanvas] = useState(false);
+  const [showDateRangeModal, setShowDateRangeModal] = useState(false);
   const [temContaBB, setTemContaBB] = useState(filters.temContaBB || '');
   const [faixaEtaria, setFaixaEtaria] = useState(filters.faixaEtaria || '');
+  const [dataInicio, setDataInicio] = useState(filters.dataInicio || '');
+  const [dataFim, setDataFim] = useState(filters.dataFim || '');
 
   // Estatísticas dos filtros
   const stats = getFilterStats();
@@ -34,14 +38,40 @@ const Filtros = () => {
 
     if (temContaBB) newFilters.temContaBB = temContaBB;
     if (faixaEtaria) newFilters.faixaEtaria = faixaEtaria;
+    if (dataInicio) newFilters.dataInicio = dataInicio;
+    if (dataFim) newFilters.dataFim = dataFim;
 
     updateFilters(newFilters);
-  }, [temContaBB, faixaEtaria, updateFilters]);
+  }, [temContaBB, faixaEtaria, dataInicio, dataFim, updateFilters]);
 
   const handleLimparFiltros = () => {
     setTemContaBB('');
     setFaixaEtaria('');
+    setDataInicio('');
+    setDataFim('');
     clearFilters();
+  };
+
+  const handleApplyDateRange = (startDate, endDate) => {
+    if (startDate && endDate) {
+      const formattedStart = startDate.toISOString().split('T')[0];
+      const formattedEnd = endDate.toISOString().split('T')[0];
+      setDataInicio(formattedStart);
+      setDataFim(formattedEnd);
+    } else {
+      setDataInicio('');
+      setDataFim('');
+    }
+  };
+
+  const formatDateRangeDisplay = () => {
+    if (dataInicio && dataFim) {
+      const start = new Date(dataInicio).toLocaleDateString('pt-BR');
+      const end = new Date(dataFim).toLocaleDateString('pt-BR');
+      if (start === end) return start;
+      return `${start} - ${end}`;
+    }
+    return 'Selecionar período';
   };
 
   return (
@@ -109,6 +139,50 @@ const Filtros = () => {
               </Form.Select>
             </Form.Group>
 
+            {/* Filtro de Data com Range Picker */}
+            <Form.Group className="mb-3">
+              <Form.Label>Período</Form.Label>
+              <div className="d-grid">
+                <Button
+                  variant="outline-primary"
+                  onClick={() => setShowDateRangeModal(true)}
+                  className="text-start d-flex align-items-center justify-content-between"
+                >
+                  <span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      className="bi bi-calendar-range me-2"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M9 7a1 1 0 0 1 1-1h5v2h-5a1 1 0 0 1-1-1zM1 9h4a1 1 0 0 1 0 2H1V9z"/>
+                      <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                    </svg>
+                    {formatDateRangeDisplay()}
+                  </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    className="bi bi-chevron-right"
+                    viewBox="0 0 16 16"
+                  >
+                    <path fillRule="evenodd" d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z"/>
+                  </svg>
+                </Button>
+              </div>
+              {(dataInicio && dataFim) && (
+                <Form.Text className="text-muted d-block mt-2">
+                  <small>
+                    Filtrando dados do período selecionado
+                  </small>
+                </Form.Text>
+              )}
+            </Form.Group>
+
             {/* Botão Limpar Filtros */}
             <div className="d-grid gap-2 mt-4">
               <Button variant="outline-secondary" onClick={handleLimparFiltros}>
@@ -147,6 +221,15 @@ const Filtros = () => {
           </Form>
         </Offcanvas.Body>
       </Offcanvas>
+
+      {/* Modal de Seleção de Intervalo de Datas */}
+      <DateRangeFilter
+        show={showDateRangeModal}
+        onHide={() => setShowDateRangeModal(false)}
+        onApply={handleApplyDateRange}
+        initialStartDate={dataInicio}
+        initialEndDate={dataFim}
+      />
     </>
   );
 };
