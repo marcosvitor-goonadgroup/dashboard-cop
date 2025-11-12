@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { DateRangePicker } from 'react-date-range';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { Modal, Button } from 'react-bootstrap';
@@ -9,6 +9,7 @@ import './DateRangeFilter.css';
 
 const DateRangeFilter = ({ show, onHide, onApply, initialStartDate, initialEndDate }) => {
   const { data } = useData();
+  const prevShowRef = useRef(false);
 
   // Usar useMemo para calcular as datas mínimas e máximas apenas quando os dados mudarem
   const { minDate, maxDate } = useMemo(() => {
@@ -51,16 +52,25 @@ const DateRangeFilter = ({ show, onHide, onApply, initialStartDate, initialEndDa
     }
   ]);
 
-  // Atualizar o range quando o modal for aberto pela primeira vez
+  // Atualizar o range apenas quando o modal for aberto (mudança de false para true)
   useEffect(() => {
-    if (show && !initialStartDate && !initialEndDate) {
-      setDateRange([{
-        startDate: minDate,
-        endDate: maxDate,
-        key: 'selection'
-      }]);
+    if (show && !prevShowRef.current) {
+      if (!initialStartDate && !initialEndDate) {
+        setDateRange([{
+          startDate: minDate,
+          endDate: maxDate,
+          key: 'selection'
+        }]);
+      } else if (initialStartDate && initialEndDate) {
+        setDateRange([{
+          startDate: new Date(initialStartDate),
+          endDate: new Date(initialEndDate),
+          key: 'selection'
+        }]);
+      }
     }
-  }, [show]);
+    prevShowRef.current = show;
+  }, [show, initialStartDate, initialEndDate, minDate, maxDate]);
 
   const handleDateRangeChange = (item) => {
     setDateRange([item.selection]);
