@@ -14,7 +14,7 @@ const Filtros = () => {
   const [showOffcanvas, setShowOffcanvas] = useState(false);
   const [showDateRangeModal, setShowDateRangeModal] = useState(false);
   const [temContaBB, setTemContaBB] = useState(filters.temContaBB || '');
-  const [faixaEtaria, setFaixaEtaria] = useState(filters.faixaEtaria || '');
+  const [faixasEtariasSelecionadas, setFaixasEtariasSelecionadas] = useState(filters.faixasEtarias || []);
   const [dataInicio, setDataInicio] = useState(filters.dataInicio || '');
   const [dataFim, setDataFim] = useState(filters.dataFim || '');
 
@@ -37,19 +37,29 @@ const Filtros = () => {
     const newFilters = {};
 
     if (temContaBB) newFilters.temContaBB = temContaBB;
-    if (faixaEtaria) newFilters.faixaEtaria = faixaEtaria;
+    if (faixasEtariasSelecionadas.length > 0) newFilters.faixasEtarias = faixasEtariasSelecionadas;
     if (dataInicio) newFilters.dataInicio = dataInicio;
     if (dataFim) newFilters.dataFim = dataFim;
 
     updateFilters(newFilters);
-  }, [temContaBB, faixaEtaria, dataInicio, dataFim, updateFilters]);
+  }, [temContaBB, faixasEtariasSelecionadas, dataInicio, dataFim, updateFilters]);
 
   const handleLimparFiltros = () => {
     setTemContaBB('');
-    setFaixaEtaria('');
+    setFaixasEtariasSelecionadas([]);
     setDataInicio('');
     setDataFim('');
     clearFilters();
+  };
+
+  const handleToggleFaixaEtaria = (value) => {
+    setFaixasEtariasSelecionadas(prev => {
+      if (prev.includes(value)) {
+        return prev.filter(v => v !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
   };
 
   const handleApplyDateRange = (startDate, endDate) => {
@@ -126,17 +136,32 @@ const Filtros = () => {
 
             {/* Filtro de Faixa Etária */}
             <Form.Group className="mb-3">
-              <Form.Label>Faixa Etária</Form.Label>
-              <Form.Select
-                value={faixaEtaria}
-                onChange={(e) => setFaixaEtaria(e.target.value)}
-              >
-                {faixasEtarias.map((faixa) => (
-                  <option key={faixa.value} value={faixa.value}>
-                    {faixa.label}
-                  </option>
-                ))}
-              </Form.Select>
+              <Form.Label>Faixa Etária (Seleção múltipla)</Form.Label>
+              <div className="border rounded p-3">
+                {faixasEtarias
+                  .filter(faixa => faixa.value !== '')
+                  .map((faixa) => (
+                    <Form.Check
+                      key={faixa.value}
+                      type="checkbox"
+                      id={`faixa-${faixa.value}`}
+                      label={faixa.label}
+                      checked={faixasEtariasSelecionadas.includes(faixa.value)}
+                      onChange={() => handleToggleFaixaEtaria(faixa.value)}
+                      className="mb-2"
+                    />
+                  ))}
+                {faixasEtariasSelecionadas.length === 0 && (
+                  <Form.Text className="text-muted small d-block mt-2">
+                    Nenhuma faixa selecionada (mostrando todas)
+                  </Form.Text>
+                )}
+                {faixasEtariasSelecionadas.length > 0 && (
+                  <Form.Text className="text-primary small d-block mt-2">
+                    {faixasEtariasSelecionadas.length} faixa(s) selecionada(s)
+                  </Form.Text>
+                )}
+              </div>
             </Form.Group>
 
             {/* Filtro de Data com Range Picker */}

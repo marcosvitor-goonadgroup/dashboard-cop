@@ -12,7 +12,10 @@
       "Bash(findstr:*)",
       "Bash(powershell -Command \"if (Test-Path node_modules) { Remove-Item -Recurse -Force node_modules }\")",
       "Bash(powershell -Command \"if (Test-Path package-lock.json) { Remove-Item -Force package-lock.json }\")",
-      "Bash(nul)"
+      "Bash(nul)",
+      "Bash(timeout /t 15 /nobreak)",
+      "Bash(node test-funcionarios.js:*)",
+      "Bash(del test-funcionarios.js 2)"
     ],
     "deny": [],
     "ask": []

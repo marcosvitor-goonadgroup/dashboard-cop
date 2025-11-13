@@ -6,7 +6,7 @@ import { useData } from '../context/DataContext';
 import Filtros from '../components/Filtros';
 
 const Dashboard = () => {
-  const { loading, error, getMetrics, getCheckInsPorAtivacao, getCheckInsPorDia, getPicosPorHorario, getFunnelData, getDistribuicaoFaixaEtaria, getDistribuicaoBase, getAnalisePesquisa, filters, updateFilters } = useData();
+  const { loading, error, getMetrics, getCheckInsPorAtivacao, getCheckInsPorDia, getPicosPorHorario, getFunnelData, getDistribuicaoFaixaEtaria, getDistribuicaoBase, getAnalisePesquisa, getCheckinsPortAtivacaoPorDia, filters, updateFilters } = useData();
   const [ativacaoSelecionada, setAtivacaoSelecionada] = useState(null);
   const [dataSelecionadaPicos, setDataSelecionadaPicos] = useState(null);
   const [modalRespostasAberto, setModalRespostasAberto] = useState(false);
@@ -22,6 +22,9 @@ const Dashboard = () => {
 
   // Obter dados da pesquisa
   const dadosPesquisa = getAnalisePesquisa();
+
+  // Obter dados de check-ins por ativação por dia
+  const dadosTabelaAtivacoes = getCheckinsPortAtivacaoPorDia();
 
   // Obter dados do gráfico de ativações (Top 10)
   const chartData = getCheckInsPorAtivacao().slice(0, 10);
@@ -1015,6 +1018,106 @@ const Dashboard = () => {
           </div>
         </>
       )}
+
+      {/* Card: Tabela de Check-ins por Ativação por Dia */}
+      <div className="row mt-4">
+        <div className="col-12">
+          <div className="card border-0 shadow-sm">
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#198754" className="bi bi-table me-2" viewBox="0 0 16 16">
+                  <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/>
+                </svg>
+                <h5 className="card-title mb-0">Check-ins por Ativação por Dia</h5>
+              </div>
+              <p className="text-muted small mb-4">Visualize quantos check-ins foram realizados em cada ativação divididos por dia</p>
+
+              {dadosTabelaAtivacoes.ativacoes.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-hover table-bordered align-middle">
+                    <thead className="table-dark">
+                      <tr>
+                        <th className="text-center" style={{ minWidth: '200px' }}>Ativação</th>
+                        {dadosTabelaAtivacoes.dias.map((dia, index) => {
+                          const dataFormatada = new Date(dia + 'T00:00:00').toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit'
+                          });
+                          return (
+                            <th key={index} className="text-center" style={{ minWidth: '100px' }}>
+                              Dia {index + 1}
+                              <br />
+                              <small className="text-white-50">{dataFormatada}</small>
+                            </th>
+                          );
+                        })}
+                        <th className="text-center bg-primary text-white" style={{ minWidth: '120px' }}>
+                          Acumulado Total
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dadosTabelaAtivacoes.ativacoes.map((ativacao, index) => (
+                        <tr key={index}>
+                          <td className="fw-semibold">
+                            {ativacao.nome}
+                            <br />
+                            <small className="text-muted">{ativacao.tipo?.replace(/_/g, ' ')}</small>
+                          </td>
+                          {dadosTabelaAtivacoes.dias.map((dia, diaIndex) => {
+                            const valor = ativacao.dadosDia[dia] || 0;
+                            return (
+                              <td key={diaIndex} className="text-center">
+                                {valor > 0 ? (
+                                  <span className="badge bg-success">{valor}</span>
+                                ) : (
+                                  <span className="text-muted">-</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="text-center bg-light">
+                            <strong className="text-primary" style={{ fontSize: '1.1rem' }}>
+                              {ativacao.total}
+                            </strong>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="table-secondary">
+                      <tr>
+                        <td className="fw-bold">TOTAL GERAL</td>
+                        {dadosTabelaAtivacoes.dias.map((dia, diaIndex) => {
+                          const totalDia = dadosTabelaAtivacoes.ativacoes.reduce(
+                            (sum, ativacao) => sum + (ativacao.dadosDia[dia] || 0),
+                            0
+                          );
+                          return (
+                            <td key={diaIndex} className="text-center fw-bold">
+                              {totalDia}
+                            </td>
+                          );
+                        })}
+                        <td className="text-center bg-primary text-white fw-bold" style={{ fontSize: '1.2rem' }}>
+                          {dadosTabelaAtivacoes.ativacoes.reduce((sum, ativacao) => sum + ativacao.total, 0)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              ) : (
+                <div className="alert alert-info">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-info-circle me-2" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                    <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                  </svg>
+                  Nenhum dado disponível com os filtros atuais.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Modal de Respostas do Bloco de Conhecimento */}
       {modalRespostasAberto && dadosModalRespostas && (

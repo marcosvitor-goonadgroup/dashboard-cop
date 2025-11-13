@@ -111,18 +111,18 @@ export const DataProvider = ({ children }) => {
       }
     }
 
-    // Filtrar por faixa et�ria
-    if (filters.faixaEtaria) {
+    // Filtrar por faixas et�rias (m�ltiplas sele��es)
+    if (filters.faixasEtarias && filters.faixasEtarias.length > 0) {
       if (filteredTables.up_users?.data) {
         const usuariosFiltradosPorFaixa = filteredTables.up_users.data.filter(user => {
           const faixaDoUsuario = determinarFaixaEtaria(user.data_usuario);
-          return faixaDoUsuario === filters.faixaEtaria;
+          return filters.faixasEtarias.includes(faixaDoUsuario);
         });
 
         const idsFaixa = new Set(usuariosFiltradosPorFaixa.map(u => u.id));
 
         if (usuariosFiltradosIds) {
-          // Interseção dos dois filtros
+          // Interse��o dos dois filtros
           usuariosFiltradosIds = new Set([...usuariosFiltradosIds].filter(id => idsFaixa.has(id)));
         } else {
           usuariosFiltradosIds = idsFaixa;
@@ -1320,6 +1320,89 @@ export const DataProvider = ({ children }) => {
     };
   }, [getFilteredData]);
 
+  // Fun��o para obter check-ins por ativa��o por dia
+  const getCheckinsPortAtivacaoPorDia = useCallback(() => {
+    const filteredData = getFilteredData();
+    if (!filteredData) return { ativacoes: [], dias: [], dados: {} };
+
+    const ativacoes = filteredData.ativacoes?.data || [];
+    const checkins = filteredData.checkins?.data || [];
+    const checkinsAtivacaoLnk = filteredData.checkins_ativacao_lnk?.data || [];
+
+    // Criar mapa de check-ins por ID para acesso r�pido
+    const checkinsMap = new Map();
+    checkins.forEach(checkin => {
+      checkinsMap.set(checkin.id, checkin);
+    });
+
+    // Criar mapa de ativa��es por ID
+    const ativacoesMap = new Map();
+    ativacoes.forEach(ativacao => {
+      ativacoesMap.set(ativacao.id, ativacao);
+    });
+
+    // Criar estrutura de dados agrupada por nome de ativa��o: { nomeAtivacao: { dia: Set(checkinIds) } }
+    const dadosPorNomeAtivacao = {};
+    const diasSet = new Set();
+
+    checkinsAtivacaoLnk.forEach(link => {
+      const checkin = checkinsMap.get(link.checkin_id);
+      const ativacao = ativacoesMap.get(link.ativacao_id);
+
+      if (!checkin || !checkin.created_at || !ativacao) return;
+
+      const nomeAtivacao = ativacao.nome;
+      const dia = checkin.created_at.split('T')[0]; // Formato YYYY-MM-DD
+
+      diasSet.add(dia);
+
+      if (!dadosPorNomeAtivacao[nomeAtivacao]) {
+        dadosPorNomeAtivacao[nomeAtivacao] = {
+          nome: nomeAtivacao,
+          tipo: ativacao.tipo,
+          diasCheckins: {}
+        };
+      }
+
+      if (!dadosPorNomeAtivacao[nomeAtivacao].diasCheckins[dia]) {
+        dadosPorNomeAtivacao[nomeAtivacao].diasCheckins[dia] = new Set();
+      }
+
+      // Adicionar o checkin_id ao Set para contar apenas check-ins �nicos
+      dadosPorNomeAtivacao[nomeAtivacao].diasCheckins[dia].add(link.checkin_id);
+    });
+
+    // Ordenar dias
+    const dias = Array.from(diasSet).sort();
+
+    // Criar array de ativa��es com seus dados (contando check-ins �nicos)
+    const ativacoesComDados = Object.values(dadosPorNomeAtivacao)
+      .map(ativacao => {
+        const dadosDia = {};
+        let total = 0;
+
+        dias.forEach(dia => {
+          const count = ativacao.diasCheckins[dia]?.size || 0;
+          dadosDia[dia] = count;
+          total += count;
+        });
+
+        return {
+          nome: ativacao.nome,
+          tipo: ativacao.tipo,
+          dadosDia,
+          total
+        };
+      })
+      .sort((a, b) => b.total - a.total); // Ordenar por total decrescente
+
+    return {
+      ativacoes: ativacoesComDados,
+      dias,
+      dados: dadosPorNomeAtivacao
+    };
+  }, [getFilteredData]);
+
   // Fun��o para limpar todos os filtros
   const clearFilters = useCallback(() => {
     setFilters({});
@@ -1367,6 +1450,7 @@ export const DataProvider = ({ children }) => {
     getDistribuicaoFaixaEtaria,
     getDistribuicaoBase,
     getAnalisePesquisa,
+    getCheckinsPortAtivacaoPorDia,
 
     // Funções de navegação entre relações (baseadas em relacoes_app.csv)
     getCheckInsByUser,
